@@ -1,5 +1,6 @@
 package com.spring.openstack.configure.filters;
 
+import com.spring.openstack.data.OpenStackAuth;
 import org.openstack4j.api.exceptions.ClientResponseException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationServiceException;
@@ -99,8 +100,10 @@ public class OpenStackFilter extends UsernamePasswordAuthenticationFilter {
         // 이미 인증이 된 경우이다.
         if(tokenId != null && tokenExpire != null) {
             try {
+                // 토큰이 만료되지 않았다면
                 if(checkExpire(tokenExpire)) {
-                    //TODO : 인증객체 구현 필요
+                    // 객체를 생성하는데, 객체가 생성되었다는 것은 인증이 되었다는 뜻
+                    new OpenStackAuth(tokenId);
                     chain.doFilter(httpServletRequest, httpServletResponse);
                 } else {
                     unsuccessfulAuthentication(httpServletRequest, httpServletResponse, new AuthenticationServiceException("Token has been expired."));
