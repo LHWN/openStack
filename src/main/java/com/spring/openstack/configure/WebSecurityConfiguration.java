@@ -1,15 +1,27 @@
 package com.spring.openstack.configure;
 
+import com.spring.openstack.configure.filters.OpenStackFilter;
+import com.spring.openstack.configure.provider.OpenStackTokenAuthProvider;
+import org.openstack4j.api.OSClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableGlobalMethodSecurity
 public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
-    // webignore 통해 인증하지 않고도 접근 가능하도록 무시
+
+    private final OSClient.OSClientV3 adminOSClient;
+
+    @Autowired
+    public WebSecurityConfiguration(OSClient.OSClientV3 adminOSClient) {
+        this.adminOSClient = adminOSClient;
+    }
 
     @Override
     public void configure(WebSecurity web) throws Exception {
@@ -23,6 +35,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+        http.addFilterAt(openStackFilter(), UsernamePasswordAuthenticationFilter.class);
         http.headers().frameOptions().sameOrigin()
                 .and().formLogin().loginPage("/login")
                 .and().logout().logoutUrl("/logout")
@@ -31,7 +44,14 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
         http.csrf().disable();
     }
 
-    // login 경로로 접근하면 로그인 페이지 나오게
-    // /loing 과 / root 경로는 모두 접근 가능하게
-    // 그외의 모든 request 는 인증해야함
+    private OpenStackFilter openStackFilter() throws Exception {
+        OpenStackFilter openStackFilter = new OpenStackFilter(this.authenticationManager());
+        //TODO: Successful, Failure Handler
+        return openStackFilter;
+    }
+
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.authenticationProvider(new OpenStackTokenAuthProvider(adminOSClient));
+    }
 }
