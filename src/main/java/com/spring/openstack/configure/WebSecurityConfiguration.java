@@ -1,6 +1,8 @@
 package com.spring.openstack.configure;
 
 import com.spring.openstack.configure.filters.OpenStackFilter;
+import com.spring.openstack.configure.handler.OpenStackAuthenticationFailure;
+import com.spring.openstack.configure.handler.OpenStackAuthenticationSuccess;
 import com.spring.openstack.configure.provider.OpenStackTokenAuthProvider;
 import org.openstack4j.api.OSClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +48,8 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     private OpenStackFilter openStackFilter() throws Exception {
         OpenStackFilter openStackFilter = new OpenStackFilter(this.authenticationManager());
-        //TODO: Successful, Failure Handler
+        openStackFilter.setAuthenticationSuccessHandler(new OpenStackAuthenticationSuccess());
+        openStackFilter.setAuthenticationFailureHandler(new OpenStackAuthenticationFailure());
         return openStackFilter;
     }
 
