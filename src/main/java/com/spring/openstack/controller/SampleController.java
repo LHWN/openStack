@@ -27,7 +27,7 @@ public class SampleController {
 
     @GetMapping("/server/list")
     public String serverList(Model model) {
-        List<NovaServer> serverList = computeResourceService.getAllComputeList(true);
+        List<NovaServer> serverList = (List<NovaServer>) computeResourceService.getAllComputeList(true);
         model.addAttribute("serverList", serverList);
         return "server/list";
     }
